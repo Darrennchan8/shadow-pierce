@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<title>Shadow Pierce options</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 16px; min-width: 360px; }
+  label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  input { margin-top: 3px; }
+  p { margin: 4px 0 0 24px; opacity: 0.75; }
+  code { font-size: 12px; }
+</style>
+<label>
+  <input type="checkbox" id="bareGlobals">
+  <span>Replace the console's <code>$</code> and <code>$$</code></span>
+</label>
+<p>
+  Defines <code>window.$</code> / <code>window.$$</code> after page load on pages that don't use those names.
+  Turn this off if a site misbehaves. <code>console.$</code> and <code>console.$$</code> always work.
+  Takes effect on the next page load.
+</p>
+<script src="options.js"></script>

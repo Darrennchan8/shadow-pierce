@@ -5,7 +5,14 @@
   "description": "Chrome extension: shadow-piercing $ and $$ for the DevTools console.",
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "render-assets": "node scripts/render-assets.mjs",
+    "package": "mkdir -p dist && git archive --format=zip -o dist/shadow-pierce-$npm_package_version.zip HEAD manifest.json LICENSE src options icons"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Darrennchan8/shadow-pierce.git"
   },
   "devDependencies": {
     "playwright-core": "1.65.1"

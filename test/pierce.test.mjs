@@ -10,7 +10,7 @@ import { chromium } from 'playwright-core';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fixtures = path.join(root, 'test', 'fixtures');
 
-let server, origin, profile, context;
+let server, origin, profile, context, worker;
 
 before(async () => {
   server = http.createServer(async (req, res) => {
@@ -28,8 +28,11 @@ before(async () => {
   context = await chromium.launchPersistentContext(profile, {
     headless: true,
     executablePath: process.env.CHROMIUM_PATH || undefined,
+    channel: process.env.CHROMIUM_PATH ? undefined : 'chromium', // headless shell can't load extensions
     args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`, '--no-sandbox'],
   });
+  worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
+  await setBareGlobals(true);
 });
 
 after(async () => {
@@ -37,6 +40,18 @@ after(async () => {
   await rm(profile, { recursive: true, force: true });
   server?.close();
 });
+
+// Changes the setting the way the options page does, then waits for the
+// background worker to (un)register globals.js.
+const setBareGlobals = value => worker.evaluate(async value => {
+  await chrome.storage.sync.set({ bareGlobals: value });
+  for (let i = 0; i < 100; i++) {
+    const registered = await chrome.scripting.getRegisteredContentScripts({ ids: ['globals'] });
+    if (registered.length === Number(value)) return;
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  throw new Error('globals.js registration did not follow the setting');
+}, value);
 
 async function open(name) {
   const page = await context.newPage();
@@ -100,4 +115,33 @@ test('page-defined $ and $$ win, console.$ / console.$$ still work', async () =>
   assert.equal(await page.evaluate('$$'), 'page $$');
   assert.deepEqual(await ids(page, "console.$$('.target')"), ['in-closed']);
   assert.deepEqual(errors, []);
+});
+
+test('with bare globals off, only console.$ / console.$$ are defined', async () => {
+  await setBareGlobals(false);
+  try {
+    const { page } = await open('index.html');
+    assert.equal(await page.evaluate('`${typeof window.$}/${typeof window.$$}`'), 'undefined/undefined');
+    assert.deepEqual(await ids(page, "console.$$('#in-nested')"), ['in-nested']);
+  } finally {
+    await setBareGlobals(true);
+  }
+});
+
+test('manifest and package versions match', async () => {
+  const manifest = JSON.parse(await readFile(path.join(root, 'manifest.json'), 'utf8'));
+  const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(manifest.version, pkg.version);
+});
+
+test('the options checkbox reflects and changes the setting', async () => {
+  const page = await context.newPage();
+  await page.goto(new URL('/options/options.html', worker.url()).href);
+  await page.waitForFunction(() => document.getElementById('bareGlobals').checked, null, { timeout: 5000 });
+  try {
+    await page.locator('#bareGlobals').uncheck();
+    assert.deepEqual(await worker.evaluate(() => chrome.storage.sync.get('bareGlobals')), { bareGlobals: false });
+  } finally {
+    await setBareGlobals(true);
+  }
 });

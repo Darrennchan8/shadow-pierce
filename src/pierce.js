@@ -102,13 +102,6 @@
   define(console, '$', api.$);
   define(console, '$$', api.$$);
 
-  // The bare globals replace the DevTools built-ins, but only once page
-  // scripts have had their chance to claim the names, so boot-time feature
-  // detection (`if (window.$)`) still sees nothing. Configurable data
-  // properties also let later `var $` / `let $` / `window.$ =` win cleanly.
-  const claimGlobals = () => {
-    for (const name of ['$', '$$']) if (!(name in window)) define(window, name, api[name]);
-  };
-  if (document.readyState === 'complete') claimGlobals();
-  else window.addEventListener('load', claimGlobals, { once: true });
+  // For globals.js, which is only registered while the bare $ / $$ setting is on.
+  Object.defineProperty(window, Symbol.for('shadow-pierce.api'), { value: api });
 })();
