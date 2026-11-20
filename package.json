@@ -1,0 +1,13 @@
+{
+  "name": "shadow-pierce",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome extension: shadow-piercing $ and $$ for the DevTools console.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "playwright-core": "1.65.1"
+  }
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Shadow Pierce fixtures</title>
+<script>window.typeofAtBoot = `${typeof $}/${typeof $$}`;</script>
+
+<p class="target" id="light">light</p>
+<div id="open-host"></div>
+<div id="closed-host"></div>
+<x-closed id="custom-host"></x-closed>
+<x-dsd id="dsd-custom-host"><template shadowrootmode="closed"><b class="target" id="in-dsd-custom">declarative, custom element</b></template></x-dsd>
+<div id="dsd-plain-host"><template shadowrootmode="closed"><b class="target" id="in-dsd-plain">declarative, plain div</b></template></div>
+
+<script>
+  document.getElementById('open-host').attachShadow({ mode: 'open' })
+    .innerHTML = '<span class="target" id="in-open">open</span>';
+
+  const closed = document.getElementById('closed-host').attachShadow({ mode: 'closed' });
+  closed.innerHTML = '<span class="target" id="in-closed">closed</span><div id="nested-host"></div>';
+  closed.getElementById('nested-host').attachShadow({ mode: 'closed' })
+    .innerHTML = '<i class="target" id="in-nested">nested closed</i>';
+
+  customElements.define('x-closed', class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'closed' }).innerHTML = '<u class="target" id="in-custom">custom element</u>';
+    }
+  });
+
+  customElements.define('x-dsd', class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachInternals(); // adopts the declarative root; deliberately not stored
+    }
+  });
+
+  // Uses a brand-new about:blank iframe synchronously; the test then
+  // searches it from the parent frame.
+  const frame = document.createElement('iframe');
+  frame.id = 'frame';
+  document.body.append(frame);
+  const doc = frame.contentDocument;
+  const frameHost = doc.createElement('div');
+  doc.body.append(frameHost);
+  frameHost.attachShadow({ mode: 'closed' }).innerHTML = '<s class="target" id="in-frame">iframe</s>';
+</script>

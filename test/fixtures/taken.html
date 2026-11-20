@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Page that owns $ and $$</title>
+<script>var $ = function jQueryLike() { return 'page $'; };</script>
+<script>let $$ = 'page $$';</script>
+
+<div id="host"></div>
+<script>
+  document.getElementById('host').attachShadow({ mode: 'closed' })
+    .innerHTML = '<p class="target" id="in-closed">closed</p>';
+</script>

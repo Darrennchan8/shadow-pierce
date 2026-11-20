@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Shadow Pierce",
+  "version": "0.1.0",
+  "description": "Makes $ and $$ in the DevTools console find elements inside open and closed shadow roots.",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/pierce.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true
+    }
+  ]
+}
